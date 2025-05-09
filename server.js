@@ -45,8 +45,6 @@ const excludePaths = [];
 app.use(cookieParser());
 app.use((req, res, next) => {
   res.locals.version = pkg.version;
-  res.locals.SocketIO = constants.SocketIO;
-  res.locals.SocketURL = constants.SocketUrl;
   req.con = con;
   if (excludePaths.includes(req.path)) {
     next();
