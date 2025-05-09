@@ -1,0 +1,350 @@
+<div class="modal fade" id="newModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Misi Mingguan Baru
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/newQuestWebsite" class="formSubmit" method="post" autocomplete="off">
+                <input type="hidden" name="_csrf" id="csrf" value="<%= csrfToken %>">
+                <input type="text" id="maxQuest" value="<%= maxQuest %>" hidden>
+                <div class="modal-body">
+                    <div id="globalErr" class="text-danger mt-1 mb-3 text-center fw-bold" style="display: none;"></div>
+
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="month" class="form-label">Bulan</label>
+                                <select class="form-select fw-bold text-white" style="width: 100%;" name="month"
+                                    id="month">
+                                    <!-- Options will be added dynamically by JavaScript -->
+                                </select>
+                                <div id="errMonth" class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="year" class="form-label">Tahun</label>
+                                <select class="form-select fw-bold text-white" style="width: 100%;" name="year"
+                                    id="year">
+                                    <!-- Options will be added dynamically by JavaScript -->
+                                </select>
+                                <div id="errYear" class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md">
+                                <div class="mb-3">
+                                    <label for="week" class="form-label">Priode</label>
+                                    <select class="form-select fw-bold text-white" style="width: 100%;" name="week"
+                                        id="week">
+                                        <!-- Options will be added dynamically by JavaScript -->
+                                    </select>
+                                    <div id="errWeek" class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="bg-primary">
+                    <div class="row">
+                        <div class="col">
+                            <div class="accordion mb-3" id="quest-block">
+
+                            </div>
+                            <% if(maxQuest> 0 ) { %>
+                                <button type="button" class="btn btn-info btn-sm btn-block mb-3 w-100"
+                                    id="addQuestButton">Tambah Misi</button>
+                                <% } %>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="btnProcess">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $('#addQuestButton').click(function (e) {
+        e.preventDefault()
+        $(this).blur()
+        $('.accordion-collapse').removeClass('show')
+        $('.accordion-button').addClass('collapsed')
+        let maxQuest = $('#maxQuest').val()
+        counterQuest += 1
+        let html =
+            `
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse${counterQuest}" aria-expanded="true"
+                        aria-controls="collapse${counterQuest}">
+                        Quest
+                    </button>
+                </h2>
+                <div id="collapse${counterQuest}" class="accordion-collapse collapse show bg-white"
+                    data-bs-parent="#quest-block">
+                    <div class="accordion-body">
+                        <div class="row justify-content-between mb-3">
+                            <div class="col-md-4 mb-3">
+                                <select class="form-select fw-bold text-white" style="width: 100%;" name="weekly_quest" id="weekly_quest">
+                                    <% quests.forEach(function(quest) { %>
+                                        <option value="<%= quest.ID %>" ><%= quest.Quest %></option>
+                                    <% }); %>
+                                </select>
+                                <div id="errQuest" class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <select class="form-select fw-bold text-white" style="width: 100%;" name="level" id="level" onchange="getLevelSelect(parseInt($(this).val()),${counterQuest})">
+                                        <% for (let i = 1; i <= 5; i++) { %>
+                                            <option value="<%= i %>">Level <%= i %></option>
+                                        <% } %>
+                                    </select>
+                                    <div id="errQuestValue" class="invalid-feedback"></div>
+                            </div>
+                    
+                            <div class="col-md-2 mb-3">
+                                <button type="button" class="btn btn-danger btnHapusForm">Hapus</button>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="row g-3 align-items-center mb-3" id="bronze${counterQuest}">
+                                    <div class="col-6">
+                                        <label for="" class="col-form-label">Bronze Gatcha</label>
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="text" class="form-control" name="bronzeValue" id="value${counterQuest}"></input>
+                                    </div>
+                                </div>
+                                <div class="row g-3 align-items-center mb-3" id="silver${counterQuest}">
+                                    <div class="col-6">
+                                        <label for="" class="col-form-label">Silver Gatcha</label>
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="text" class="form-control" name="silverValue" id="value${counterQuest}"></input>
+                                    </div>
+                                </div>
+                                <div class="row g-3 align-items-center mb-3" id="gold${counterQuest}">
+                                    <div class="col-6">
+                                        <label for="" class="col-form-label">Gold Gatcha</label>
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="text" class="form-control" name="goldValue" id="value${counterQuest}"></input>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row g-3 align-items-center mb-3" id="platinum${counterQuest}">
+                                    <div class="col-6">
+                                        <label for="" class="col-form-label">Platinum Gatcha</label>
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="text" class="form-control" name="platinumValue" id="value${counterQuest}"></input>
+                                    </div>
+                                </div>
+                                <div class="row g-3 align-items-center mb-3" id="diamond${counterQuest}">
+                                    <div class="col-6">
+                                        <label for="" class="col-form-label">Diamond Gatcha</label>
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="text" class="form-control" name="diamondValue" id="value${counterQuest}"></input>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `
+        $('#quest-block').append(html)
+        $('#silver' + counterQuest).hide()
+        $('#gold' + counterQuest).hide()
+        $('#platinum' + counterQuest).hide()
+        $('#diamond' + counterQuest).hide()
+
+        if (counterQuest >= maxQuest) {
+            $('#addQuestButton').hide()
+        }
+
+    });
+
+    $(document).on('click', '.btnHapusForm', function () {
+        $(this).closest('.accordion-item').remove();
+        $('#addQuestButton').show()
+        counterQuest -= 1
+    });
+
+    function disablePastMonths() {
+        const monthSelect = document.getElementById('month');
+        const yearSelect = document.getElementById('year');
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+
+        for (let i = 0; i < monthSelect.options.length; i++) {
+            const optionMonth = parseInt(monthSelect.options[i].value, 10);
+            const optionYear = parseInt(yearSelect.value, 10);
+
+            if (optionYear === currentYear) {
+                if (optionMonth < currentMonth) {
+                    monthSelect.options[i].disabled = true;
+                } else {
+                    monthSelect.options[i].disabled = false;
+                }
+            } else {
+                monthSelect.options[i].disabled = false;
+            }
+        }
+    }
+
+    function getMondaysInMonth(month, year) {
+        const weeks = [];
+        const firstDayOfMonth = new Date(year, month - 1, 1);
+        const lastDayOfMonth = new Date(year, month, 0);
+        let day = firstDayOfMonth;
+
+        while (day.getDay() !== 1) {
+            day.setDate(day.getDate() + 1);
+        }
+
+        while (day <= lastDayOfMonth) {
+            const endOfWeek = new Date(day);
+            endOfWeek.setDate(day.getDate() + 6);
+            weeks.push({
+                start: new Date(day),
+                end: endOfWeek
+            });
+            day.setDate(day.getDate() + 7);
+        }
+
+        return weeks;
+    }
+
+    function formatDate(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    }
+
+    function populateWeekOptions() {
+        const monthSelect = document.getElementById('month');
+        const weekSelect = document.getElementById('week');
+        const yearSelect = document.getElementById('year');
+
+        weekSelect.innerHTML = '';
+
+        const selectedMonth = parseInt(monthSelect.value, 10);
+        const selectedYear = parseInt(yearSelect.value, 10);
+
+        const weeks = getMondaysInMonth(selectedMonth, selectedYear);
+
+        weeks.forEach((week, index) => {
+            const option = document.createElement('option');
+            option.value = index + 1; // Week number
+            const startDate = formatDate(week.start);
+            const endDate = formatDate(week.end);
+            option.text = `Minggu ke-${index + 1} (${startDate} - ${endDate})`;
+            weekSelect.appendChild(option);
+        });
+    }
+
+    function populateMonthOptions() {
+        const monthSelect = document.getElementById('month');
+        const yearSelect = document.getElementById('year');
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear(); // Get current year
+
+        const months = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+
+        months.forEach((monthName, index) => {
+            const option = document.createElement('option');
+            const month = index + 1;
+            option.value = month;
+            option.text = monthName;
+            if (month === new Date().getMonth() + 1) {
+                option.selected = true;
+            }
+            monthSelect.appendChild(option);
+        });
+
+        for (let i = 0; i < 2; i++) {
+            const option = document.createElement('option');
+            option.value = currentYear + i;
+            option.text = currentYear + i;
+            yearSelect.appendChild(option);
+        }
+    }
+
+    function getLevelSelect(level, counter) {
+        $('#silver' + counter).hide()
+        $('#gold' + counter).hide()
+        $('#platinum' + counter).hide()
+        $('#diamond' + counter).hide()
+
+        if (level >= 1) $('#bronze' + counter).show();
+        if (level >= 2) $('#silver' + counter).show();
+        if (level >= 3) $('#gold' + counter).show();
+        if (level >= 4) $('#platinum' + counter).show();
+        if (level >= 5) $('#diamond' + counter).show();
+
+        if (!$('#silver' + counter).is(':visible')) $('#silver' + counter + ' input').val('');
+        if (!$('#gold' + counter).is(':visible')) $('#gold' + counter + ' input').val('');
+        if (!$('#platinum' + counter).is(':visible')) $('#platinum' + counter + ' input').val('');
+        if (!$('#diamond' + counter).is(':visible')) $('#diamond' + counter + ' input').val('');
+    }
+
+    $(document).ready(function () {
+
+        let maxQuest = $('#maxQuest').val();
+        if (maxQuest < 1) {
+            $('#globalErr').text('Max Quest Belum Diisi').show()
+        }
+
+        document.getElementById('month').addEventListener('change', populateWeekOptions);
+        document.getElementById('year').addEventListener('change', () => {
+            populateWeekOptions();
+            disablePastMonths();
+        });
+        populateMonthOptions();
+        populateWeekOptions();
+        disablePastMonths();
+
+        counterQuest = 0
+
+        $('.formSubmit').submit(function (e) {
+            e.preventDefault()
+            let form = $(this)
+            $.ajax({
+                url: form.attr('action'),
+                type: form.attr('method'),
+                dataType: 'json',
+                data: form.serialize(),
+                beforeSend: function () {
+                    $('#btnSubmit').attr('disabled', 'disabled')
+                    $('#btnSubmit').html('<i class="fa fa-spin fa-spinner"></i>')
+                },
+                success: function (response) {
+                    $('#btnSubmit').html('Simpan').removeAttr('disabled')
+                    if (response.error) {
+                        if (response.error.global) {
+                            $("#globalErr").html(response.error.global).show()
+                        } else {
+                            $("#globalErr").text('').hide()
+                        }
+                    } else {
+                        $('#newModal').modal('hide')
+                        // dataTable.ajax.reload(null, false)
+
+                    }
+                },
+                error: function (a, b, c) {
+                    alert(c)
+                }
+            })
+        })
+    })
+</script>

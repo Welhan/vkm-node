@@ -1,0 +1,299 @@
+<div class="card bg-secondary">
+    <div class="card-header bg-primary">
+        <div class="d-flex justify-content-between">
+            <div class="text-white">
+                Withdraw Approval
+            </div>
+            <input type="hidden" name="csrfToken" id="csrfToken" value="<%= csrfToken %>">
+        </div>
+    </div>
+    <div class="card-body bg-white">
+        <% if (successMessage && successMessage[0] !=undefined ) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa fa-exclamation-circle me-2"></i>
+                <%= successMessage[0] %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <% } %>
+                <% if (errorMessage && errorMessage[0] !=undefined ) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa fa-exclamation-circle me-2"></i>
+                        <%= errorMessage[0] %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <% } %>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label for="start_date" class="form-label">Start Date</label>
+                                    <input type="text" class="form-control" id="start_date" readonly>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label for="end_date" class="form-label">End Date</label>
+                                    <input type="text" class="form-control" id="end_date" readonly>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select text-white" id="status">
+                                        <option value="">All</option>
+                                        <option value="Pending" selected>Pending</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label for="player" class="form-label">Player</label>
+                                    <input type="text" class="form-control text-white" id="player" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <button type="button" class="btn btn-info mt-2" id="btnSearch">Search</button>
+                            </div>
+                        </div>
+    </div>
+    <div class="card-body bg-white">
+        <div class="table-responsive mb-3">
+            <table class="table text-center" style="width:100%">
+                <thead class="bg-primary">
+                    <th class="text-white">Summary Coin</th>
+                    <th class="text-white">Total Outstanding</th>
+                    <th class="text-white">Total Request</th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="summaryCoin" class="fw-bold">0</td>
+                        <td id="totalOutstanding">0</td>
+                        <td id="totalRequest">0</td>
+                    </tr>
+                    <%if(!bracketLink){%>
+                        <tr>
+                            <td colspan="3" class="bg-danger text-center fw-bold text-white">Bracket Link Belum
+                                Terdaftar</td>
+                        </tr>
+                        <%}%>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-responsive">
+            <table id="dataTable" class="table table-bordered table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Waktu Request</th>
+                        <th>Player</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="data"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div id="viewModal" style="display: none;"></div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"
+    integrity="sha512-8BHxHDLsOHx+flIrQ0DrZcea7MkHqRU5GbTHmbdzMRnAaoCIkZ97PqZcXJkKZckMMhqfoeaJE+DNUVuyoQsO3Q=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<% scripts=` %>
+    <script>
+        $("#btnSearch").on('click', function (e) {
+            e.preventDefault()
+            getDataWithdraw()
+        })
+        let dataTable = null;
+        getDataWithdraw();
+        function getDataWithdraw() {
+            if (dataTable !== null) {
+                dataTable.destroy();
+            }
+            dataTable = $('#dataTable').DataTable({
+                "order": [[0, 'desc']],
+                "searching": true,
+                "ajax": {
+                    "url": "/getDataWithdraw",
+                    "dataType": "json",
+                    "type": 'post',
+                    "data": {
+                        _csrf: $("#csrfToken").val(),
+                        startDate: $('#start_date').val(),
+                        endDate: $('#end_date').val(),
+                        status: $('#status').val(),
+                        player: $('#player').val()
+                    },
+                    "dataSrc": function (data) {
+                        let res = [];
+                        for (let i = 0; i < data.data.length; i++) {
+                            let row = data.data[i];
+                            let date = new Date(row.CDate);
+                            let day = String(date.getDate()).padStart(2, '0');
+                            let month = String(date.getMonth() + 1).padStart(2, '0');
+                            let year = date.getFullYear();
+                            let hours = String(date.getHours()).padStart(2, '0');
+                            let minutes = String(date.getMinutes()).padStart(2, '0');
+                            let seconds = String(date.getSeconds()).padStart(2, '0');
+                            let rowData = {
+                                "ID": row.ID,
+                                "CDate": day + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds,
+                                "Username": row.Username,
+                                "Amount": new Intl.NumberFormat('id-ID', {
+                                    style: 'currency', currency: 'IDR'
+                                    , minimumFractionDigits: 0, maximumFractionDigits: 0
+                                })
+                                    .format(row.Amount).replace('Rp', '').trim(),
+                                "Status": row.Status,
+                                "LastUser": row.Admin,
+                                "Remarks": row.Remarks,
+                                "CreditID": row.CreditID,
+                                "LastDate": row.Last_Date
+                            };
+                            res.push(rowData);
+                        }
+                        return res;
+                    }
+                },
+                "columns": [
+                    { "data": "CDate" },
+                    { "data": "Username" },
+                    { "data": "Amount" },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            let formHtml = '';
+                            if (row.Status == 'Pending') {
+                                formHtml += '<button class="btn btn-info mr-3" onclick="processWithdraw(' + row.ID + ', \'Approved\')">Approve</button>';
+                                formHtml += '<button class="btn btn-danger ml-3" onclick="processWithdraw(' + row.ID + ', \'Rejected\')">Reject</button>';
+                                return '<div class="d-flex align-items-center justify-content-center">' + formHtml + '</div>';
+                            } else if (row.Status == 'Approved') {
+                                let date = new Date(row.LastDate);
+                                let day = String(date.getDate()).padStart(2, '0');
+                                let month = String(date.getMonth() + 1).padStart(2, '0');
+                                let year = date.getFullYear();
+                                let hours = String(date.getHours()).padStart(2, '0');
+                                let minutes = String(date.getMinutes()).padStart(2, '0');
+                                let seconds = String(date.getSeconds()).padStart(2, '0');
+                                formHtml += row.Status + ' by <b>' + row.LastUser + '</b><br> On ' + day + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds;
+                            } else if (row.Status == 'Rejected') {
+                                let date = new Date(row.LastDate);
+                                let day = String(date.getDate()).padStart(2, '0');
+                                let month = String(date.getMonth() + 1).padStart(2, '0');
+                                let year = date.getFullYear();
+                                let hours = String(date.getHours()).padStart(2, '0');
+                                let minutes = String(date.getMinutes()).padStart(2, '0');
+                                let seconds = String(date.getSeconds()).padStart(2, '0');
+                                formHtml += row.Status + ' by <b>' + row.LastUser + '</b><br> On ' + day + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds + "<br>Remarks: <span class = 'text-danger fw-bold'>" + row.Remarks + "</span>";
+                            }
+
+                            return formHtml;
+                        }
+                    }
+                ]
+            });
+        }
+
+        function getCoin() {
+            $.ajax({
+                url: '/getCoinData',
+                type: 'post',
+                dataType: 'json', data: {
+                    _csrf: $("#csrfToken").val(),
+                }, beforeSend: function () { },
+                success: function (response) {
+                    if (response.result.coin) {
+                        $('#summaryCoin').html(new Intl.NumberFormat('id-ID', {
+                            style: 'currency', currency: 'IDR'
+                            , minimumFractionDigits: 0, maximumFractionDigits: 2
+                        })
+                            .format(response.result.coin).replace('Rp', '').trim())
+                    } else {
+                        $('#summaryCoin').html(0)
+                    }
+
+                    if (response.result.outstanding) {
+                        $('#totalOutstanding').html(new Intl.NumberFormat('id-ID', {
+                            style: 'currency', currency: 'IDR'
+                            , minimumFractionDigits: 0, maximumFractionDigits: 2
+                        })
+                            .format(response.result.outstanding).replace('Rp', '').trim())
+                    } else {
+                        $('#totalOutstanding').html(0)
+                    }
+
+                    if (response.result.request) {
+                        $('#totalRequest').html(new Intl.NumberFormat('id-ID', {
+                            style: 'currency', currency: 'IDR'
+                            , minimumFractionDigits: 0, maximumFractionDigits: 2
+                        })
+                            .format(response.result.request).replace('Rp', '').trim())
+                    } else {
+                        $('#totalRequest').html(0)
+                    }
+
+                    if (Number(response.result.coin) < (Number(response.result.outstanding) + Number(response.result.request))) {
+                        $('#summaryCoin').addClass('text-danger')
+                        $('#summaryCoin').removeClass('text-success')
+                        $('#summaryCoin').html(response.result.coin.toLocaleString() + '  <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>')
+                    } else {
+                        $('#summaryCoin').addClass('text-success')
+                        $('#summaryCoin').removeClass('text-danger')
+                    }
+
+                },
+                error: function (a, b, c) { alert(c) }
+            })
+        }
+
+        function processWithdraw(id, status) {
+            $.ajax({
+                url: '/confirmationWithdraw',
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    _csrf: $("#csrfToken").val(),
+                    id,
+                    status
+                },
+                beforeSend: function () { },
+                success: function (response) {
+                    if (response.error) {
+                        alert(response.error)
+                    } else {
+                        $("#viewModal").html(response.view).show()
+                        $("#confirmationModal").modal('show')
+                    }
+                }
+            })
+
+        }
+
+        $(document).ready(function () {
+            jQuery('#start_date').datetimepicker({
+                timepicker: false,
+                format: 'd/m/Y',
+                lang: 'id',
+                onSelectDate: function (currentDate) {
+                    const startDate = $('#start_date').val();
+                    jQuery('#end_date').datetimepicker({
+                        timepicker: false,
+                        format: 'd/m/Y',
+                        lang: 'id',
+                        minDate: currentDate
+                    });
+                }
+            });
+
+            jQuery('#end_date').datetimepicker({
+                timepicker: false,
+                format: 'd/m/Y',
+                lang: 'id'
+            });
+
+            getCoin()
+        });
+    </script>
+    <% ` %>

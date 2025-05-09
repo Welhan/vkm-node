@@ -1,0 +1,87 @@
+<input type="hidden" name="csrfToken" id="csrfToken" value="<%= csrfToken %>">
+<div class="row">
+    <div class="col-lg-6">
+        <div class="mb-3">
+            <label for="bulan" class="form-label">Bulan</label>
+            <select class="form-select text-white" id="bulanWithdraw">
+                <% for (let i=0; i < result.length; i++){ %>
+                    <option value="<%= result[i].dateResult %>">
+                        <%= result[i].dateResult.split('-').reverse().join('-') %>
+                    </option>
+                    <%}%>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table id="tableWithdraw" class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Prize</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    let withdrawTable = null;
+
+    function getDataWithdrawWinner() {
+        let bulan = $('#bulanWithdraw').val()
+        if (withdrawTable !== null) {
+            withdrawTable.destroy();
+        }
+        withdrawTable = $('#tableWithdraw').DataTable({
+            "order": [[0, 'asc']],
+            "searching": true,
+            "ajax": {
+                "url": "/getWithdrawData",
+                "dataType": "json",
+                "type": 'post',
+                "data": {
+                    _csrf: $("#csrfToken").val(),
+                    bulan
+                },
+                "dataSrc": function (data) {
+                    let res = [];
+                    for (let i = 0; i < data.data.length; i++) {
+                        let row = data.data[i];
+                        let date = new Date(row.CDate);
+                        let day = String(date.getDate()).padStart(2, '0');
+                        let month = String(date.getMonth() + 1).padStart(2, '0');
+                        let year = date.getFullYear();
+                        let hours = String(date.getHours()).padStart(2, '0');
+                        let minutes = String(date.getMinutes()).padStart(2, '0');
+                        let seconds = String(date.getSeconds()).padStart(2, '0');
+                        let rowData = {
+                            "ID": row.ID,
+                            "Rank": row.Rank,
+                            "Username": row.Username,
+                            "Prize": row.Prize + ' %'
+                        };
+                        res.push(rowData);
+                    }
+                    return res;
+                }
+            },
+            "columns": [
+                { "data": "Rank" },
+                { "data": "Username" },
+                { "data": "Prize" },
+
+            ]
+        });
+    }
+
+    $('#bulanWithdraw').change(function () {
+        getDataWithdrawWinner()
+    })
+
+    $(document).ready(function () {
+        getDataWithdrawWinner()
+    })
+</script>

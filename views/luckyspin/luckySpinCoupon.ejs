@@ -1,0 +1,148 @@
+<div class="card bg-secondary text-white">
+    <div class="card-header bg-primary">
+        <div class="d-flex justify-content-between">
+            <div>
+                Luckyspin Coupon
+                <input type="hidden" name="csrf" id="csrf" value="<%= csrfToken %>">
+            </div>
+            <div>
+                <button type="button" class="btn btn-dark btn-sm" id="btnNewCoupon">New Coupon</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body bg-white">
+        <% if (successMessage && successMessage[0] !=undefined ) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa fa-exclamation-circle me-2"></i>
+                <%= successMessage[0] %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <% } %>
+                <% if (errorMessage && errorMessage[0] !=undefined ) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fa fa-exclamation-circle me-2"></i>
+                        <%= errorMessage[0] %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <% } %>
+                        <form class="formCouponLuckySpin" autocomplete="off">
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <label class="form-label text-dark">Tanggal</label>
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control" id="startDate">
+                                        <span class="input-group-text bg-primary text-white fw-bold">-</span>
+                                        <input type="text" class="form-control" id="endDate">
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        <label for="status" class="form-label text-dark">Tiket Loyalty</label>
+                                        <select class="form-select text-white" id="loyalty" name="loyalty"
+                                            aria-label="Default select example">
+                                            <option value="" selected>All</option>
+                                            <option value="Bronze">Bronze</option>
+                                            <option value="Silver">Silver</option>
+                                            <option value="Gold">Gold</option>
+                                            <option value="Platinum">Platinum</option>
+                                            <option value="Diamond">Diamond</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    <label for="username" class="form-label text-dark">Username</label>
+                                    <input type="text" class="form-control" id="username">
+                                </div>
+                                <div class="col-lg-2">
+                                    <br>
+                                    <button type="submit" class="btn btn-primary mt-2" id="btnFilter">Filter</button>
+                                </div>
+                            </div>
+                            <div id="dataTableCoupon"></div>
+                        </form>
+    </div>
+</div>
+<div id="viewModal" style="display: none;"></div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"
+    integrity="sha512-8BHxHDLsOHx+flIrQ0DrZcea7MkHqRU5GbTHmbdzMRnAaoCIkZ97PqZcXJkKZckMMhqfoeaJE+DNUVuyoQsO3Q=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<% scripts=` %>
+    <script>
+        $(document).ready(function () {
+            getDataCoupon();
+            jQuery('#startDate').datetimepicker({
+                timepicker: false,
+                format: 'd/m/Y',
+                lang: 'id',
+                onSelectDate: function (currentDate) {
+                    const startDate = $('#startDate').val();
+                    jQuery('#endDate').datetimepicker({
+                        timepicker: false,
+                        format: 'd/m/Y',
+                        lang: 'id',
+                        minDate: currentDate
+                    });
+                }
+            }).attr('readonly', true);
+
+            jQuery('#endDate').datetimepicker({
+                timepicker: false,
+                format: 'd/m/Y',
+                lang: 'id'
+            }).attr('readonly', true);
+        });
+        function getDataCoupon() {
+            $.ajax({
+                url: '/getDataCoupon',
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    _csrf: $("#csrf").val(),
+                    startDate: $("#startDate").val(),
+                    endDate: $("#endDate").val(),
+                    loyalty: $("#loyalty").val(),
+                    username: $("#username").val()
+                },
+                beforeSend: function () {
+                    $("#dataTableCoupon").html('')
+                },
+                success: function (response) {
+                    $("#dataTableCoupon").html(response.view)
+                },
+                error: function (a, b, c) {
+                    alert(c)
+                }
+            })
+        }
+        // $("#btnFilterLoyalty").on('click', function (e) {
+        //     e.preventDefault()
+        //     getDataCoupon()
+        // })
+
+        $('.formCouponLuckySpin').submit(function (e) {
+            e.preventDefault()
+            getDataCoupon()
+        })
+
+        $("#btnNewCoupon").on('click', function (e) {
+            e.preventDefault()
+            $.ajax({
+                url: 'getAddCoupon',
+                type: 'post',
+                dataType: 'json',
+                data: {
+                    _csrf: $("#csrf").val(),
+                },
+                success: function (response) {
+                    $("#viewModal").html(response.view).show()
+                    $("#addCouponModal").modal("show")
+                },
+                error: function (a, b, c) {
+                    alert(c)
+                }
+            })
+        })
+    </script>
+    <% ` %>

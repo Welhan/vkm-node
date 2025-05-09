@@ -1,0 +1,97 @@
+<div class="modal fade" id="confirmationAllModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi <%= status %> Level Up
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/approveAllWager" class="formSubmit" method="post">
+                <input type="hidden" name="_csrf" id="csrf" value="<%= csrfToken %>">
+                <div class="modal-body">
+                    <div id="errGlobal" class="text-danger mb-3 text-center" style="display: none;"></div>
+                    <% if(result.length> 0) { %>
+                        <input type="hidden" name="status" value="<%= status %>">
+                        <input type="hidden" name="loyalty" value="<%= loyalty %>">
+                        <input type="hidden" name="dateTran" value="<%= dateTran %>">
+                        <table class="table table-bordered text-center">
+                            <thead class="bg-primary">
+
+                                <th class="text-white">Total Username</th>
+                                <th class="text-white">Total Hadiah</th>
+                            </thead>
+                            <tbody>
+                                <tr>
+
+                                    <td>
+                                        <%= result[0].TotalPlayer %> Player
+                                    </td>
+                                    <td>
+                                        <%= new Intl.NumberFormat('id-ID', { style: 'currency' , currency: 'IDR'
+                                            ,minimumFractionDigits: 0, maximumFractionDigits: 0 })
+                                            .format(Math.round(result[0].TotalPrize)).replace('Rp', '' ).trim() %>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <% } %>
+                            <% if (status==='Rejected' ) { %>
+                                <div class="mb-3">
+                                    <label for="remarks" class="form-label">Alasan Reject</label>
+                                    <textarea class="form-control text-white" id="remarks" name="remarks" rows="3"
+                                        required></textarea>
+                                </div>
+                                <% } %>
+                </div>
+                <div class="modal-footer">
+                    <% if(result.length> 0) { %>
+                        <button type="submit" class="btn btn-primary" id="btnSubmit">Submit</button>
+                        <% } %>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('.formSubmit').submit(function (e) {
+        e.preventDefault()
+        let form = $(this)
+        $.ajax({
+            url: form.attr('action'),
+            type: form.attr('method'),
+            dataType: 'json',
+            data: form.serialize(),
+            beforeSend: function () {
+                $('#btnSubmit').attr('disabled', 'disabled')
+                $('#btnSubmit').html('<i class="fa fa-spin fa-spinner"></i>')
+            },
+            success: function (response) {
+                if (response.error) {
+                    if (response.error.global) {
+                        $('#errGlobal').html(response.error.global).show()
+                    } else {
+                        $('#errGlobal').html('').hide()
+                    }
+
+                    if (response.error.remarks) {
+                        $('#errGlobal').html(response.error.remarks).show()
+                        $('#remarks').addClass('is-invalid')
+                    } else {
+                        $('#errGlobal').html('').hide()
+                        $('#remarks').removeClass('is-invalid')
+                    }
+                }
+
+                if (response.status) {
+                    $('#confirmationAllModal').modal('hide')
+                    wagerTable.ajax.reload(null, false)
+                    countPending()
+                }
+            },
+            error: function (a, b, c) {
+                alert(c)
+            }
+        })
+    })
+</script>

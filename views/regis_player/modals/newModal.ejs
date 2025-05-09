@@ -1,0 +1,122 @@
+<div class="modal fade" id="addPlayerModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-secondary">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Daftar Player Leaderboard</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form class="formSubmit" autocomplete="off">
+                <input type="hidden" name="_csrf" id="csrf" value="<%= csrfToken %>">
+                <div id="globalErr" class="text-danger mt-1 mb-3 text-center fw-bold" style="display: none;"></div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="">Username</label>
+                            <select id="Username" style="width: 100%;" name="Username" class="form-control"></select>
+                            <div id="errUsername" class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="">Phone <small>(Silahkan cocokan dengan No. WA yang sebenarnya)</small></label>
+                            <input type="text" name="Phone" id="Phone" class="form-control fw-bold" readonly>
+                            <div id="errPhone" class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="">Password</label>
+                            <input type="text" name="Password" id="Password" class="form-control">
+                            <div id="errPassword" class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" class="btnSubmit">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+
+    $(".formSubmit").on('submit', function (e) {
+        e.preventDefault()
+        $.ajax({
+            url: '/addPlayer',
+            type: 'post',
+            dataType: 'json',
+            data: $(this).serialize(),
+            beforeSend: function () {
+                $('#btnSubmit').attr('disabled', 'disabled')
+            },
+            success: function (response) {
+                $('#btnSubmit').removeAttr('disabled')
+                $('#btnSubmit').removeAttr('disabled')
+                if (response.logout) {
+                    window.location.href = response.logout
+                } else {
+                    if (response.error) {
+                        if (response.error.Username) {
+                            $("#Username").addClass('is-invalid')
+                            $("#errUsername").html(response.error.Username)
+                        } else {
+                            $("#Username").removeClass('is-invalid')
+                            $("#errUsername").html('')
+                        }
+
+                        if (response.error.Phone) {
+                            $("#Phone").addClass('is-invalid')
+                            $("#errPhone").html(response.error.Phone)
+                        } else {
+                            $("#Phone").removeClass('is-invalid')
+                            $("#errPhone").html('')
+                        }
+
+                        if (response.error.Password) {
+                            $("#Password").addClass('is-invalid')
+                            $("#errPassword").html(response.error.Password)
+                        } else {
+                            $("#Password").removeClass('is-invalid')
+                            $("#errPassword").html('')
+                        }
+                    } else {
+                        window.location.reload()
+                    }
+                }
+            },
+            error: function (a, b, c) {
+                alert(c)
+            }
+        })
+    })
+    $('#Username').select2({
+        placeholder: 'Type for searching...',
+        ajax: {
+            url: '/checkUsername',
+            dataType: 'json',
+            type: 'post',
+            delay: 250,
+            data: function (params) {
+                return {
+                    _csrf: $("#csrf").val(),
+                    Username: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map(function (item) {
+                        $("#Phone").val(item.text)
+                        return {
+                            id: item.id,
+                            text: item.id
+                        };
+                    })
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 5,
+        dropdownParent: $('#addPlayerModal')
+    });
+</script>

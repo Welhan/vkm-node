@@ -1,0 +1,155 @@
+<div class="table-responsive text-black">
+    <input type="hidden" name="csrf" id="csrf" value="<%= csrfToken %>">
+
+    <table class="table table-bordered text-center w-50">
+        <thead class="bg-primary">
+            <th class="text-white">Total Kupon</th>
+            <th class="text-white">Belum Dipakai</th>
+            <th class="text-white">Terpakai</th>
+            <th class="text-white">Sedang Dipakai</th>
+            <th class="text-white">Expired</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <%= count.TotalToken %>
+                </td>
+                <td>
+                    <%= count.TotalUnUsed %>
+                </td>
+                <td>
+                    <%= count.TotalUsed %>
+                </td>
+                <td>
+                    <%= count.TotalSedangDigunakan %>
+                </td>
+                <td>
+                    <%= count.TotalExpired %>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="table" id="tableLuckySpinCoupon">
+        <thead>
+            <th>#</th>
+            <th>Player</th>
+            <th>Loyalty</th>
+            <th>Status</th>
+            <th>Action</th>
+        </thead>
+        <tbody>
+            <% let num=1 %>
+                <% data.forEach(el=> { %>
+                    <tr>
+                        <td>
+                            #<%= num++ %>
+                        </td>
+                        <td>
+                            <%= el.Username %>
+                        </td>
+                        <td>
+                            <%= el.Loyalty %>
+                        </td>
+                        <td>
+                            <% if(el.Prize==null) {%>
+                                <span class="badge text-bg-warning">Hadiah belum di set</span>
+                                <% } else if(el.UsedF==1){%>
+                                    <span class="badge text-bg-success" onclick="checkCoupon('<%= el.ID %>')"
+                                        style="cursor: pointer;">Terpakai</span>
+                                    <% } else{%>
+                                        <% if(el.IsExpired==1){%>
+                                            <span class="badge text-bg-danger">Expired</span>
+                                            <% } else if(el.StatusPenggunaan) { %>
+                                                <span class="badge text-bg-primary">Sedang dipakai</span>
+                                                <% } else { %>
+                                                    <span class="badge text-bg-info">Belum terpakai</span>
+                                                    <% } %>
+                                                        <% } %>
+                        </td>
+                        <td>
+                            <% if(el.Prize==null) {%>
+                                <button class="btn btn-sm btn-warning" onclick="setCoupon('<%= el.ID %>')">Set</button>
+                                <button class="btn btn-sm btn-danger"
+                                    onclick="deleteCoupon('<%= el.ID %>')">Delete</button>
+                                <% } else if(el.Prize !=null && el.UsedF !=0){%>
+                                    <% }else{ %>
+                                        <% if(el.IsExpired==0 && el.StatusPenggunaan=='' ){%>
+                                            <button class="btn btn-sm btn-info"
+                                                onclick="editCoupon('<%= el.ID %>')">Edit</button>
+                                            <button class="btn btn-sm btn-danger"
+                                                onclick="deleteCoupon('<%= el.ID %>')">Delete</button>
+                                            <% } %>
+                                                <% } %>
+
+                        </td>
+                    </tr>
+                    <% }) %>
+        </tbody>
+    </table>
+</div>
+<div id="viewDataTableModal" style="display: none;"></div>
+<script>
+    $(document).ready(function () {
+        $('#tableLuckySpinCoupon').DataTable({
+            ordering: false,
+            searching: false,
+        });
+    });
+    function setCoupon(ID) {
+        $.ajax({
+            url: '/getSetCoupon',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                _csrf: $("#csrf").val(),
+                ID
+            },
+            success: function (response) {
+                $("#viewDataTableModal").html(response.view).show()
+                $("#setCouponModal").modal('show')
+            },
+            error: function (a, b, c) {
+                alert(c)
+            }
+        })
+    }
+    function editCoupon(ID) {
+        $.ajax({
+            url: '/getUpdateCoupon',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                _csrf: $("#csrf").val(),
+                ID
+            },
+            success: function (response) {
+                $("#viewDataTableModal").html(response.view).show()
+                $("#updateCouponModal").modal('show')
+            },
+            error: function (a, b, c) {
+                alert(c)
+            }
+        })
+    }
+
+    function deleteCoupon(ID) {
+        console.log(ID)
+        $.ajax({
+            url: '/getDeleteCoupon',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                _csrf: $("#csrf").val(),
+                ID
+            },
+            success: function (response) {
+                $("#viewDataTableModal").html(response.view).show()
+                $("#deleteCouponModal").modal('show')
+            },
+            error: function (a, b, c) {
+                alert(c)
+            }
+        })
+    }
+</script>

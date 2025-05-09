@@ -1,0 +1,77 @@
+<div class="modal fade" id="deletePrizeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-secondary">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Delete Prize</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form class="formSubmit">
+                <input type="hidden" name="csrf" id="csrf" value="<%= csrfToken %>">
+                <div class="modal-body text-white">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="">Loyalty</label>
+                            <input type="hidden" name="ID" id="ID" value="<%= data.ID %>" readonly>
+                            <input type="text" name="" id="LoyaltySelect" value="<%= data.Loyalty %>"
+                                class="form-control" readonly>
+                            <div class="invalid-feedback" id="errLoyaltySelect"></div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="">Jenis Hadiah</label>
+                            <input type="text" name="" id="" value="<%= data.Jenis %>" class="form-control" readonly>
+                            <div class="invalid-feedback" id="errType"></div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="">Prize</label>
+                            <input type="text" name="" id="" value="<%= data.Prize %>" class="form-control" readonly>
+                            <div class="invalid-feedback" id="errNominal"></div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="">Level Hadiah</label>
+                            <input type="text" name="" id="" value="<%= data.PrizeLevel %>" class="form-control"
+                                readonly>
+                            <div class="invalid-feedback" id="errLevel"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" class="btnSubmit">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $(".formSubmit").on('submit', function (e) {
+        e.preventDefault()
+        $.ajax({
+            url: '/deletePrize',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                _csrf: $("#csrf").val(),
+                ID: $("#ID").val(),
+                Loyalty: $("#LoyaltySelect").val(),
+            },
+            beforeSend: function () {
+                $('#btnSubmit').attr('disabled', 'disabled')
+            },
+            success: function (response) {
+                $('#btnSubmit').removeAttr('disabled')
+                // window.location.reload()
+                $('#deletePrizeModal').modal('hide')
+                // luckyspinPrize.ajax.reload(null, false)
+                getDataPrize($("#LoyaltySelect").val())
+            },
+            error: function (a, b, c) {
+                alert(c)
+            }
+        })
+    })
+</script>

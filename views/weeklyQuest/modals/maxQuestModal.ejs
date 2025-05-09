@@ -1,0 +1,58 @@
+<div class="modal fade" id="maxQuestModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Setting Max Quest
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/updateMaxQuest" class="formSubmit" method="post">
+                <input type="hidden" name="_csrf" id="csrf" value="<%= csrfToken %>">
+
+                <div class="modal-body">
+                    <div id="globalErr" class="text-danger mt-1 mb-3 text-center fw-bold" style="display: none;"></div>
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-lg">
+                                <input type="number" class="form-control" name="maxQuest" id="maxQuest" placeholder="0"
+                                    autocomplete="off" max="<%= quests.length %>" value="<%= maxQuest %>" min="1">
+                                <small class="fw-bold text-success">Maksimal Jumlah Quest: <%= quests.length %></small>
+                                <div id="errMax" class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="btnProcess">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.formSubmit').submit(function (e) {
+            e.preventDefault()
+            $.ajax({
+                url: $(this).attr('action'),
+                type: $(this).attr('method'),
+                dataType: 'json',
+                data: $(this).serialize(),
+                beforeSend: function () {
+                    $('#btnSubmit').attr('disabled', 'disabled')
+                    $('#btnSubmit').html('<i class="fa fa-spin fa-spinner"></i>')
+                },
+                success: function (response) {
+                    if (response.error) {
+                        $('#btnSubmit').removeAttr('disabled', 'disabled')
+                        $('#btnSubmit').html('Save')
+                    } else {
+                        window.location.reload()
+                    }
+                },
+                error: function (a, b, c) { alert(c) }
+            })
+        })
+    })
+</script>

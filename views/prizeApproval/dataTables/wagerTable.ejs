@@ -1,0 +1,256 @@
+<input type="hidden" name="csrfToken" id="csrfToken" value="<%= csrfToken %>">
+<div class="row">
+    <div class="col-lg-6">
+        <div class="mb-3">
+            <label for="loyalty" class="form-label">Loyalty</label>
+            <select class="form-select text-white" id="loyalty">
+                <option value="Bronze" selected>Bronze</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+                <option value="Platinum">Platinum</option>
+                <option value="Diamond">Diamond</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="mb-3">
+            <label for="bulan" class="form-label">Bulan</label>
+            <select class="form-select text-white" id="bulan">
+                <% for (let i=0; i < result.length; i++){ %>
+                    <option value="<%= result[i].dateResult %>" <%=(i==0) ? 'checked' : '' %>>
+                        <%= result[i].dateResult.split('-').reverse().join('-') %>
+                    </option>
+                    <%}%>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table id="tableWager" class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th class="text-center">Rank</th>
+                <th class="text-center">Player</th>
+                <th class="text-center">Prize</th>
+                <th class="d-flex justify-content-center">
+                    <div id="actionBtn" style="display: none;">
+                        <button class="btn btn-info btn-sm" onclick="confirmAllWager('Approved')">Approve All</button>
+                        <button class="btn btn-warning btn-sm" onclick="confirmAllWager('Rejected')">Reject All</button>
+                    </div>
+                    <div id="action" style="display: none;">
+                        Action
+                    </div>
+                </th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    let wagerTable = null;
+
+    function confirmAllWager(status) {
+        let loyalty = $('#loyalty').val()
+        let dateTran = $('#bulan').val()
+        $.ajax({
+            url: '/confirmationAllWager',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                _csrf: $("#csrfToken").val(),
+                loyalty,
+                dateTran,
+                status
+            },
+            beforeSend: function () { },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error)
+                } else {
+                    $("#viewModal").html(response.view).show()
+                    $("#confirmationAllModal").modal('show')
+                }
+            }
+        })
+    }
+
+    function getDataWager() {
+        let loyalty = $('#loyalty').val()
+        let bulan = $('#bulan').val()
+        if (wagerTable !== null) {
+            wagerTable.destroy();
+        }
+        countPending()
+        wagerTable = $('#tableWager').DataTable({
+            "order": [[0, 'asc']],
+            "searching": true,
+            "ajax": {
+                "url": "/getWagerData",
+                "dataType": "json",
+                "type": 'post',
+                "data": {
+                    _csrf: $("#csrfToken").val(),
+                    loyalty,
+                    bulan
+                },
+                "dataSrc": function (data) {
+                    let res = [];
+                    let pending = 0;
+                    for (let i = 0; i < data.data.length; i++) {
+                        let row = data.data[i];
+                        if (row.Process == "Waiting") {
+                            pending++;
+                        }
+                        let date = new Date(row.CDate);
+                        let day = String(date.getDate()).padStart(2, '0');
+                        let month = String(date.getMonth() + 1).padStart(2, '0');
+                        let year = date.getFullYear();
+                        let hours = String(date.getHours()).padStart(2, '0');
+                        let minutes = String(date.getMinutes()).padStart(2, '0');
+                        let seconds = String(date.getSeconds()).padStart(2, '0');
+                        let rowData = {
+                            "ID": row.ID,
+                            "Rank": row.Rank,
+                            "Username": row.Username,
+                            "FakeAcc": row.FakeAcc,
+                            "Prize": new Intl.NumberFormat('id-ID', {
+                                style: 'currency', currency: 'IDR'
+                                , minimumFractionDigits: 0, maximumFractionDigits: 0
+                            })
+                                .format(row.Prize).replace('Rp', '').trim(),
+                            "Status": row.Process,
+                            "LastUser": row.Admin,
+                            "Remarks": row.Remarks,
+                            "LastDate": row.Last_Date
+                        };
+                        res.push(rowData);
+                    }
+                    if (data.data.length == 0 || pending == 0) {
+                        $('#action').show();
+                        $('#actionBtn').hide();
+                    } else {
+                        $('#action').hide();
+                        $('#actionBtn').show();
+                    }
+                    return res;
+                }
+            },
+            "columns": [
+                { "data": "Rank" },
+                { "data": "Username" },
+                { "data": "Prize" },
+                {
+                    "data": null,
+                    orderable: false,
+                    searchable: false,
+                    "render": function (data, type, row) {
+                        let formHtml = '';
+                        if (row.Status == 'Waiting') {
+                            formHtml += '<button class="btn btn-info mr-3" onclick="processPrize(' + row.ID + ', \'Approved\')">Approve</button>';
+                            formHtml += '<button class="btn btn-danger ml-3" onclick="processPrize(' + row.ID + ', \'Rejected\')">Reject</button>';
+                            return '<div class="d-flex align-items-center justify-content-around">' + formHtml + '</div>';
+                        } else if (row.Status == 'Approved') {
+                            let date = new Date(row.LastDate);
+                            let day = String(date.getDate()).padStart(2, '0');
+                            let month = String(date.getMonth() + 1).padStart(2, '0');
+                            let year = date.getFullYear();
+                            let hours = String(date.getHours()).padStart(2, '0');
+                            let minutes = String(date.getMinutes()).padStart(2, '0');
+                            let seconds = String(date.getSeconds()).padStart(2, '0');
+                            formHtml += row.Status + ' by <b>' + row.LastUser + '</b><br> On ' + day + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds;
+                            if (row.FakeAcc == 1) {
+                                formHtml += '(User Fake)'
+                            }
+                        } else if (row.Status == 'Rejected') {
+                            let date = new Date(row.LastDate);
+                            let day = String(date.getDate()).padStart(2, '0');
+                            let month = String(date.getMonth() + 1).padStart(2, '0');
+                            let year = date.getFullYear();
+                            let hours = String(date.getHours()).padStart(2, '0');
+                            let minutes = String(date.getMinutes()).padStart(2, '0');
+                            let seconds = String(date.getSeconds()).padStart(2, '0');
+                            formHtml += row.Status + ' by <b>' + row.LastUser + '</b><br> On ' + day + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds + "<br>Remarks: <span class = 'text-danger fw-bold'>" + row.Remarks + "</span>";
+                        }
+
+                        return formHtml;
+                    }
+                }
+            ]
+        });
+    }
+
+    $('#loyalty').change(function () {
+        getDataWager()
+    })
+
+    $('#bulan').change(function () {
+        getDataWager()
+    })
+
+    function processPrize(id, status) {
+        $.ajax({
+            url: '/getConfirmWager',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                _csrf: $("#csrfToken").val(),
+                id,
+                status
+            },
+            beforeSend: function () { },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error)
+                } else {
+                    $("#viewModal").html(response.view).show()
+                    $("#confirmationModal").modal('show')
+                }
+            }
+        })
+    }
+
+    $(document).ready(function () {
+        getDataWager()
+        countPending()
+    })
+</script>
+
+<script async>
+    function countPending() {
+        let loyalty = $('#loyalty').val()
+        let bulan = $('#bulan').val()
+        $.ajax({
+            url: '/countPending',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                _csrf: $("#csrfToken").val(),
+                loyalty,
+                bulan
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error)
+                } else {
+                    if (response.pendingLoyalty > 0) {
+                        $('#loyalty').addClass('is-invalid')
+                        $('#loyalty').removeClass('is-valid')
+                    } else {
+                        $('#loyalty').removeClass('is-invalid')
+                        $('#loyalty').addClass('is-valid')
+                    }
+
+                    if (response.pendingAll > 0) {
+                        $('#bulan').addClass('is-invalid')
+                        $('#bulan').removeClass('is-valid')
+                    } else {
+                        $('#bulan').removeClass('is-invalid')
+                        $('#bulan').addClass('is-valid')
+                    }
+                }
+            }
+        })
+    }
+</script>
