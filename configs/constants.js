@@ -1,7 +1,7 @@
 const constants = {
   transactionPath: "logs/transactions",
   errorPath: "logs/errors",
-  websiteName: "WG77",
+  websiteName: "VKM",
   developmentNotes: [
     "Bug Fixing Upload and Level Up (v1.0.1)",
     "Bug Fixing Worker Untuk Update Level User (v1.0.1)",
