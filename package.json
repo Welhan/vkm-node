@@ -28,7 +28,7 @@
   "scripts": {
     "start": "nodemon server.js"
   },
-  "name": "leaderboards",
+  "name": "vkm-mvc",
   "version": "1.0.0",
   "main": "server.js",
   "keywords": [],
