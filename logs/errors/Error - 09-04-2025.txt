@@ -1,8 +1,0 @@
-[09:14:42] Player jul77 not found in top_league di row 3031 
-[09:34:57] Player jul77 not found in top_gamer 
-[09:57:27] Player jul77 not found in top_league di row 2441 
-[10:12:23] Player jul77 not found in top_gamer 
-[10:23:41] Player apr-42 not found in top_league di row 461 
-[10:23:41] Player apr-77 not found in top_league di row 462 
-[10:45:19] Player apr-77 not found in top_gamer 
-[10:51:24] Player apr-42 not found in top_gamer 
