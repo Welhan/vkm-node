@@ -43,12 +43,9 @@ var upload = multer({
 });
 
 router.get("/", IndexController.index);
-router.post("/getDetailOTP", IndexController.getDetailOTP);
 router.get("/login", AuthController.login);
 router.post("/auth", AuthController.auth);
 router.get("/logout", AuthController.logout);
-router.post("/getPendingWD", IndexController.countPendingWD);
-router.post("/getPendingWager", IndexController.checkWagerPending);
 
 //change password
 router.post("/getChangePassword", AuthController.getChangePassword);
