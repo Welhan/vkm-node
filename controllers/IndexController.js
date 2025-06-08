@@ -6,19 +6,15 @@ const { db } = require("../configs/db");
 
 module.exports = {
   index: async function (req, res) {
-    let Username = req.session.Username;
-    if (!Username) return res.redirect("/login");
-    let menu = await helpers.generateMenu(Username);
+    let UserID = req.session.UserID;
+    if (!UserID) return res.redirect("/login");
+    let menu = await helpers.generateMenu(UserID);
     menu = await Promise.all(
       menu.map(async (item) => {
-        item.submenu = await helpers.generateSubmenu(item.ID, Username);
+        item.submenu = await helpers.generateSubmenu(item.ID, UserID);
         return item;
       })
     );
-    let levelAccess = await helpers.checkUserAccess(Username, 0, 11);
-    let otpAccess = await helpers.checkUserAccess(Username, 0, 12);
-    sqlLevelUp = `Select * from levelup_history Where ApprovalStatus = 'Pending' AND WebsiteID = ${process.env.websiteID}`;
-    countLevel = (await helpers.doQuery(db, sqlLevelUp)).results;
     return res.render("index", {
       successMessage: req.flash("success"),
       errorMessage: req.flash("error"),
@@ -26,11 +22,7 @@ module.exports = {
       menu,
       active: 0,
       open: 0,
-      levelUp: countLevel.length,
       csrfToken: req.csrfToken(),
-      constants,
-      levelAccess,
-      otpAccess,
       constants,
     });
   },
@@ -52,32 +44,5 @@ module.exports = {
         let data = {};
         return res.status(202).json(data);
       });
-  },
-  countPendingWD: async function (req, res) {
-    if (!req.session.ID) {
-      return res.status(200).json({ redirect: "/logout" });
-    }
-    let query =
-      "SELECT COUNT(*) as total FROM withdraw_coin WHERE Status = 'Pending'";
-
-    let result = (await helpers.doQuery(db, query)).results;
-    data = {
-      menu: "Coin Approval",
-      result: result[0].total,
-    };
-    return res.json(data);
-  },
-  checkWagerPending: async function (req, res) {
-    let Username = req.session.Username;
-    if (!Username) return res.redirect("/login");
-    let query = `SELECT COUNT(*) as total FROM leaderboard_winner WHERE Process = 'Waiting' AND Category = 'Top Player'`;
-    let result = (await helpers.doQuery(db, query)).results;
-
-    let data = {
-      menu: "Prize Approval",
-      result: result[0].total,
-    };
-
-    return res.json(data);
   },
 };

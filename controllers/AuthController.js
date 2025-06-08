@@ -6,6 +6,8 @@ const { db } = require("../configs/db");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const forge = require("node-forge");
+const AnggotaModel = require("../models/AnggotaModel");
+
 dotenv.config();
 
 function decrypt(encryptedString) {
@@ -17,9 +19,12 @@ function decrypt(encryptedString) {
   });
 }
 
+const anggotaModel = new AnggotaModel(db);
+
 module.exports = {
   login: async function (req, res) {
     const publicKey = fs.readFileSync("public_key.pem", "utf8");
+    // console.log(await bcrypt.hash("123123", 10));
     res.render("login/login", {
       layout: false,
       csrfToken: req.csrfToken(),
@@ -42,20 +47,13 @@ module.exports = {
     if (Object.keys(error).length > 0) {
       return res.json({ error: error });
     }
-    let checkUser = (
-      await helpers.doQuery(
-        db,
-        `SELECT ID, Username, Password, UserID, Email FROM admin WHERE Username = ?`,
-        [Username]
-      )
-    ).results;
-    if (checkUser.length > 0) {
-      let thisMatch = await bcrypt.compare(Password, checkUser[0].Password);
+    let checkUser = await anggotaModel.getByUsername(Username);
+    console.log("checkUser", checkUser);
+    if (checkUser) {
+      let thisMatch = await bcrypt.compare(Password, checkUser.Password);
       if (thisMatch) {
-        req.session.ID = checkUser[0].ID;
-        req.session.Username = checkUser[0].Username.toUpperCase();
-        req.session.UserID = checkUser[0].UserID;
-        req.session.Email = checkUser[0].Email;
+        req.session.ID = checkUser.ID;
+        req.session.UserID = checkUser.UserID;
         req.flash("success", "Login berhasil");
         return res.json({ redirect: "/" });
       } else {

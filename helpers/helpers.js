@@ -30,11 +30,11 @@ module.exports = {
     VALUES ?
   `;
 
-    const values = data.map(row => [
+    const values = data.map((row) => [
       row.user_id,
       row.level_before,
       row.level_after,
-      row.updated_at || new Date()
+      row.updated_at || new Date(),
     ]);
 
     return await this.doQuery(db, sql, [values]);
@@ -42,7 +42,9 @@ module.exports = {
   updateUserLoyaltyBatch: async function (db, data) {
     if (!data || data.length === 0) return;
 
-    const updates = data.map(user => `(${user.user_id}, ${user.new_loyalty})`).join(',');
+    const updates = data
+      .map((user) => `(${user.user_id}, ${user.new_loyalty})`)
+      .join(",");
     const sql = `
     UPDATE users AS u
     JOIN (
@@ -53,14 +55,16 @@ module.exports = {
   `;
 
     // Gaya ini hanya didukung MySQL 8+. Untuk MySQL 5.x kita bisa pakai CASE WHEN:
-    const ids = data.map(u => u.user_id);
-    const cases = data.map(u => `WHEN ${u.user_id} THEN ${u.new_loyalty}`).join(' ');
+    const ids = data.map((u) => u.user_id);
+    const cases = data
+      .map((u) => `WHEN ${u.user_id} THEN ${u.new_loyalty}`)
+      .join(" ");
     const sql5 = `
     UPDATE users
     SET loyalty = CASE id
       ${cases}
     END
-    WHERE id IN (${ids.join(',')})
+    WHERE id IN (${ids.join(",")})
   `;
 
     return await this.doQuery(db, sql5);
@@ -68,16 +72,20 @@ module.exports = {
   updateTopLeagueBatch: async function (db, data) {
     if (!data || data.length === 0) return;
 
-    const ids = data.map(row => row.id);
-    const casesTier = data.map(row => `WHEN ${row.id} THEN '${row.tier}'`).join(' ');
-    const casesScore = data.map(row => `WHEN ${row.id} THEN ${row.score}`).join(' ');
+    const ids = data.map((row) => row.id);
+    const casesTier = data
+      .map((row) => `WHEN ${row.id} THEN '${row.tier}'`)
+      .join(" ");
+    const casesScore = data
+      .map((row) => `WHEN ${row.id} THEN ${row.score}`)
+      .join(" ");
 
     const sql = `
     UPDATE top_league
     SET 
       Loyalty = CASE id ${casesTier} END,
       score = CASE id ${casesScore} END
-    WHERE id IN (${ids.join(',')})
+    WHERE id IN (${ids.join(",")})
   `;
 
     return await this.doQuery(db, sql);
@@ -94,11 +102,11 @@ module.exports = {
       created_at = VALUES(created_at)
   `;
 
-    const values = data.map(row => [
+    const values = data.map((row) => [
       row.user_id,
       row.tier,
       row.score,
-      row.created_at || new Date()
+      row.created_at || new Date(),
     ]);
 
     return await this.doQuery(db, sql, [values]);
@@ -146,7 +154,7 @@ module.exports = {
       query = `SELECT A.ID, A.Submenu, A.Url, B.SubmenuID FROM mst_submenu A
         RIGHT JOIN user_access_menu B ON A.ID = B.SubmenuID
         RIGHT JOIN mst_menu C on B.MenuID = C.ID
-        WHERE A.MenuID = '${menuid}' AND B.Username = '${username}' AND C.Active = 1 AND B.View = 1 ORDER BY C.ID ASC;`;
+        WHERE A.MenuID = '${menuid}' AND B.Username = '${username}' AND C.Active = 1 AND A.Active = 1 AND B.View = 1 ORDER BY C.ID ASC;`;
     }
     return (await this.doQuery(db, query)).results;
   },
@@ -296,12 +304,12 @@ module.exports = {
     }
     let prefixCode =
       category === "TopSlot" ||
-        category === "TopCasino" ||
-        category === "TopWD" ||
-        category === "WeeklyQuest" ||
-        category === "Custom" ||
-        category === "DailyLogin" ||
-        category === "WDCoin"
+      category === "TopCasino" ||
+      category === "TopWD" ||
+      category === "WeeklyQuest" ||
+      category === "Custom" ||
+      category === "DailyLogin" ||
+      category === "WDCoin"
         ? `${categoryCodes[category]}`
         : `${categoryCodes[category]}-${loyaltyCodes[loyalty]}`;
     let config = "";

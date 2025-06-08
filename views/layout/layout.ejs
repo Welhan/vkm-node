@@ -81,7 +81,7 @@
         <div class="sidebar pe-4 pb-3">
             <nav class="navbar bg-secondary navbar-dark">
                 <a href="/" class="navbar-brand mx-4 mb-3">
-                    <h3 class="text-primary"><i class="fa fa-bolt me-2"></i>LBPanel</h3>
+                    <h3 class="text-primary"><i class="fa-regular fa-copyright me-2"></i>VKM Panel</h3>
                 </a>
                 <div class="navbar-nav w-100">
                     <a href="/" class="nav-item nav-link <%= active == 0 && open == 0 ? 'active': '' %>"><i
@@ -166,16 +166,6 @@
     <script src="plugins/datetimepicker/jquery.datetimepicker.full.min.js"></script>
 
     <script>
-        let sockets = io.connect('<%= SocketIO %>');
-        sockets.on("connect", () => {
-            console.log("Connected to server");
-        });
-        sockets.on("send-notification", () => {
-            let notifSound = new Audio('sounds/Notif-WDCoin.mp3')
-            notifSound.play()
-            console.log("Notification received");
-        });
-
 
         // setTimeout(function () {
         //     var alert = $(".alert");
@@ -204,58 +194,8 @@
         })
 
         $(document).ready(function () {
-            checkPendingWD()
-            checkWager()
-            setInterval(() => {
-                checkPendingWD()
-                checkWager()
-            }, 10000);
+
         })
-    </script>
-    <script async>
-        function checkPendingWD() {
-            $.ajax({
-                url: '/getPendingWD',
-                type: 'post',
-                dataType: 'json',
-                success: function (response) {
-                    if (response.redirect) {
-                        window.location.href = response.redirect
-                    }
-                    if (response.result > 0) {
-                        $("#badge" + response.menu.split(' ').join('-')).text(response.result).show()
-                        // $("#badge" + response.menu.split(' ').join('-')).html("<span class='badge bg-danger'> Loading...</span>").show()
-                    } else {
-                        $("#badge" + response.menu.split(' ').join('-')).text(response.result).hide()
-                    }
-                },
-                error: function (a, b, c) {
-                    alert(c)
-                }
-            })
-        }
-    </script>
-    <script async>
-        function checkWager() {
-            $.ajax({
-                url: '/getPendingWager',
-                type: 'post',
-                dataType: 'json',
-                success: function (response) {
-                    if (response.redirect) {
-                        window.location.href = response.redirect
-                    }
-                    if (response.result > 0) {
-                        $("#dots" + response.menu.split(' ').join('-')).show()
-                    } else {
-                        $("#dots" + response.menu.split(' ').join('-')).hide()
-                    }
-                },
-                error: function (a, b, c) {
-                    alert(c)
-                }
-            })
-        }
     </script>
     <%- scripts || '' %>
 </body>
