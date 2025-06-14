@@ -48,7 +48,6 @@ module.exports = {
       return res.json({ error: error });
     }
     let checkUser = await anggotaModel.getByUsername(Username);
-    console.log("checkUser", checkUser);
     if (checkUser) {
       let thisMatch = await bcrypt.compare(Password, checkUser.Password);
       if (thisMatch) {

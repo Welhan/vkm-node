@@ -90,8 +90,10 @@
                         <div class="nav-item dropdown">
                             <a class="nav-link <%= open == menuItem.ID ? 'active': '' %>" data-bs-toggle="dropdown"
                                 style="cursor: pointer;">
-                                <i class="<%= menuItem.Icon %>"></i>
-                                <%= menuItem.Menu %>
+                                <% if(menuItem.Icon) {%>
+                                    <i class="<%= menuItem.Icon %>"></i>
+                                    <% } %>
+                                        <%= menuItem.Menu %>
                             </a>
                             <div class="dropdown-menu bg-transparent border-0 <%= open == menuItem.ID ? 'show': '' %>">
                                 <% menuItem.submenu.forEach(submenuItem=> { %>

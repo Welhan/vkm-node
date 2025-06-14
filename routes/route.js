@@ -4,6 +4,7 @@ const IndexController = require("../controllers/IndexController");
 const AuthController = require("../controllers/AuthController");
 const UploadController = require("../controllers/UploadController");
 const AdminController = require("../controllers/AdminController");
+const SettingsController = require("../controllers/SettingsController");
 const { uploadImage, uploadXlsx } = require("../configs/multer");
 const multer = require("multer");
 const crypto = require("crypto");
@@ -82,5 +83,8 @@ router.post(
 );
 router.post("/getUploadLeadsProcess", UploadController.getUploadLeadsProcess);
 router.get("/getTemplate", UploadController.templateUpload);
+
+router.get("/settings", SettingsController.index);
+router.post("/save-setting", SettingsController.updateSetting);
 
 module.exports = router;
