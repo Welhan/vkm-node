@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const IndexController = require("../controllers/IndexController");
+const DashboardController = require("../controllers/DashboardController");
 const AuthController = require("../controllers/AuthController");
 const UploadController = require("../controllers/UploadController");
 const AdminController = require("../controllers/AdminController");
@@ -43,7 +43,7 @@ var upload = multer({
   },
 });
 
-router.get("/", IndexController.index);
+router.get("/", DashboardController.index);
 router.get("/login", AuthController.login);
 router.post("/auth", AuthController.auth);
 router.get("/logout", AuthController.logout);
